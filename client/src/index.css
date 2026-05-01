@@ -1,0 +1,399 @@
+/* ── VotePilot AI — Constitutional Design System ────────────────────────────
+   Fonts: Cinzel (brand) · Playfair Display (headings) · Manrope (body)
+   Palette: Constitutional Ink Navy + Sacred Saffron + Ashoka Gold
+   ────────────────────────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Playfair+Display:wght@400;600;700;800&family=Manrope:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base ──────────────────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+  html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: 'Manrope', system-ui, sans-serif;
+    background-color: #030E20;
+    color: #F0F4FF;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 15% 10%, rgba(29,109,232,0.12) 0%, transparent 45%),
+      radial-gradient(ellipse at 85% 90%, rgba(249,115,22,0.07) 0%, transparent 40%),
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='27' fill='none' stroke='rgba(29,109,232,0.03)' stroke-width='1'/%3E%3C/svg%3E");
+  }
+
+  h1, h2, h3 {
+    font-family: 'Playfair Display', Georgia, serif;
+    letter-spacing: -0.01em;
+  }
+
+  h4, h5, h6 {
+    font-family: 'Manrope', system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+  }
+
+  :focus-visible {
+    outline: 2px solid #F97316;
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  ::selection {
+    background: rgba(249, 115, 22, 0.3);
+    color: #FAFBFF;
+  }
+}
+
+/* ─── Component Layer ────────────────────────────────────────────────────── */
+@layer components {
+
+  /* ── Constitutional Card ──────────────────────────────────────── */
+  .vp-card {
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: linear-gradient(145deg, rgba(14, 37, 72, 0.7) 0%, rgba(6, 20, 40, 0.85) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+  }
+
+  .vp-card:hover {
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  /* Saffron top-border accent card */
+  .vp-card-saffron {
+    border-top: 2px solid #F97316;
+  }
+
+  /* Gold left-border accent card */
+  .vp-card-gold {
+    border-left: 3px solid #D97706;
+  }
+
+  /* ── Buttons ──────────────────────────────────────────────────── */
+
+  /* Primary — Saffron (India's CTA color) */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #FFFFFF;
+    background: linear-gradient(135deg, #EA580C 0%, #F97316 100%);
+    box-shadow: 0 4px 20px rgba(249,115,22,0.35);
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(249,115,22,0.5);
+    background: linear-gradient(135deg, #F97316 0%, #FB923C 100%);
+  }
+
+  .btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Secondary — Gold outline */
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 24px;
+    border-radius: 10px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #FCD34D;
+    background: transparent;
+    border: 1.5px solid rgba(217, 119, 6, 0.4);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: rgba(217, 119, 6, 0.12);
+    border-color: #D97706;
+    color: #FEF08A;
+    transform: translateY(-1px);
+  }
+
+  /* Ghost / outline */
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #8FA5C8;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    background: rgba(255,255,255,0.07);
+    color: #F0F4FF;
+    border-color: rgba(255,255,255,0.15);
+  }
+
+  /* ── Navigation Link ──────────────────────────────────────────── */
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #637AA8;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    letter-spacing: 0.01em;
+  }
+
+  .nav-link:hover {
+    color: #F0F4FF;
+    background: rgba(29, 109, 232, 0.08);
+    border-color: rgba(29, 109, 232, 0.15);
+  }
+
+  .nav-link.active {
+    color: #FCD34D;
+    background: linear-gradient(135deg, rgba(19,46,92,0.8) 0%, rgba(14,37,72,0.6) 100%);
+    border-color: rgba(217, 119, 6, 0.3);
+    box-shadow: inset 0 1px 0 rgba(252,211,77,0.08);
+  }
+
+  .nav-link.active .nav-icon {
+    filter: drop-shadow(0 0 6px rgba(249,115,22,0.5));
+  }
+
+  /* ── Chat Bubbles ─────────────────────────────────────────────── */
+  .bubble-user {
+    margin-left: auto;
+    max-width: 82%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    border-bottom-right-radius: 4px;
+    background: linear-gradient(135deg, #EA580C 0%, #F97316 100%);
+    color: #FFFFFF;
+    font-size: 14px;
+    line-height: 1.6;
+    box-shadow: 0 4px 16px rgba(249,115,22,0.25);
+  }
+
+  .bubble-ai {
+    margin-right: auto;
+    max-width: 88%;
+    padding: 14px 18px;
+    border-radius: 18px;
+    border-bottom-left-radius: 4px;
+    background: linear-gradient(145deg, rgba(14,37,72,0.9) 0%, rgba(6,20,40,0.8) 100%);
+    border: 1px solid rgba(29,109,232,0.2);
+    color: #DCE5F7;
+    font-size: 14px;
+    line-height: 1.7;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+
+  /* ── Input Field ──────────────────────────────────────────────── */
+  .input-field {
+    width: 100%;
+    background: rgba(10, 28, 56, 0.8);
+    border: 1.5px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    color: #F0F4FF;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+
+  .input-field::placeholder {
+    color: #637AA8;
+  }
+
+  .input-field:focus {
+    border-color: #F97316;
+    box-shadow: 0 0 0 3px rgba(249,115,22,0.12);
+    background: rgba(14, 37, 72, 0.9);
+  }
+
+  /* ── Journey Step Circle ──────────────────────────────────────── */
+  .step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    border: 2px solid;
+    transition: all 0.3s ease;
+  }
+
+  .step-circle.complete {
+    background: linear-gradient(135deg, #EA580C, #F97316);
+    border-color: #F97316;
+    color: white;
+    box-shadow: 0 4px 16px rgba(249,115,22,0.4);
+  }
+
+  .step-circle.active {
+    background: rgba(19, 46, 92, 0.8);
+    border-color: #F97316;
+    color: #FB923C;
+    box-shadow: 0 0 0 4px rgba(249,115,22,0.15);
+  }
+
+  .step-circle.pending {
+    background: rgba(6, 20, 40, 0.5);
+    border-color: rgba(255,255,255,0.1);
+    color: #637AA8;
+  }
+
+  /* ── Readiness Bar ────────────────────────────────────────────── */
+  .readiness-bar {
+    height: 6px;
+    border-radius: 99px;
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    background: linear-gradient(90deg, #EA580C 0%, #F97316 50%, #FCD34D 100%);
+    box-shadow: 0 0 10px rgba(249,115,22,0.4);
+  }
+
+  /* ── Warning Badge ────────────────────────────────────────────── */
+  .warning-badge {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: rgba(146, 64, 14, 0.2);
+    border: 1px solid rgba(217, 119, 6, 0.4);
+    color: #FCD34D;
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+
+  /* ── Dot Loader ───────────────────────────────────────────────── */
+  .dot-loader {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .dot-loader span {
+    display: block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #F97316;
+    animation: dotBounce 1.3s ease-in-out infinite;
+  }
+
+  .dot-loader span:nth-child(1) { animation-delay: 0s; }
+  .dot-loader span:nth-child(2) { animation-delay: 0.2s; }
+  .dot-loader span:nth-child(3) { animation-delay: 0.4s; }
+
+  /* ── Ashoka Chakra Decorator ──────────────────────────────────── */
+  .chakra-bg {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(29,109,232,0.12);
+    animation: chakraSpin 30s linear infinite;
+    pointer-events: none;
+  }
+
+  /* ── Tricolor divider ─────────────────────────────────────────── */
+  .tricolor-bar {
+    height: 3px;
+    background: linear-gradient(90deg, #FF9933 33.3%, #FFFFFF 33.3% 66.6%, #138808 66.6%);
+    border-radius: 99px;
+  }
+
+  /* ── Shimmer skeleton ─────────────────────────────────────────── */
+  .shimmer {
+    background: linear-gradient(90deg,
+      rgba(255,255,255,0.03) 0%,
+      rgba(255,255,255,0.08) 50%,
+      rgba(255,255,255,0.03) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+
+  /* ── Legacy aliases (backward compatibility) ──────────────────── */
+  .glass-card     { @apply vp-card; }
+  .btn-accent     { @apply btn-primary; }
+  .surface-dark   { background-color: #030E20; }
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: rgba(217, 119, 6, 0.3);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(217, 119, 6, 0.55); }
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+@keyframes fadeIn     { from { opacity: 0 }                              to { opacity: 1 } }
+@keyframes slideUp    { from { opacity: 0; transform: translateY(20px) } to { opacity: 1; transform: translateY(0) } }
+@keyframes slideRight { from { opacity: 0; transform: translateX(-20px)} to { opacity: 1; transform: translateX(0) } }
+@keyframes glowPulse  { 0%,100% { box-shadow: 0 0 16px rgba(249,115,22,0.2) } 50% { box-shadow: 0 0 32px rgba(249,115,22,0.5) } }
+@keyframes float      { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+@keyframes chakraSpin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
+@keyframes dotBounce  { 0%,80%,100% { transform: scale(0.6); opacity: 0.4 } 40% { transform: scale(1); opacity: 1 } }
+@keyframes shimmer    { from { background-position: -200% 0 } to { background-position: 200% 0 } }
+
+/* ─── Responsive sidebar ─────────────────────────────────────────────────── */
+.sidebar-enter  { transform: translateX(-100%); }
+.sidebar-active { transform: translateX(0); transition: transform 0.3s ease; }
+
+/* ─── Markdown formatting inside bubble-ai ───────────────────────────────── */
+.bubble-ai strong { color: #FCD34D; font-weight: 700; }
+.bubble-ai em     { color: #FB923C; font-style: italic; }
+
+/* ─── High contrast mode override ───────────────────────────────────────── */
+.high-contrast body { background: #000 !important; }
+.high-contrast .vp-card { border-color: #FFF !important; background: #111 !important; }
