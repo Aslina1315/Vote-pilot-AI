@@ -106,6 +106,13 @@ export const useAuth = () => {
 };
 
 const getFriendlyError = (code) => {
+  if (code.includes('Network Error')) {
+    return 'Cannot connect to the server. Please ensure the backend is running.';
+  }
+  if (code.includes('Database connection')) {
+    return 'The database is currently offline. Please check your MongoDB configuration.';
+  }
+
   const m = {
     'auth/email-already-in-use':   'This email is already registered. Please sign in.',
     'auth/user-not-found':         'No account found with this email.',
