@@ -84,20 +84,58 @@ const useVoice = ({ onTranscript, language = 'en-US' }) => {
   const speak = useCallback((text) => {
     if (!window.speechSynthesis || !text) return;
 
-    // Cancel any ongoing speech
-    window.speechSynthesis.cancel();
+    // Load available voices
+    let voices = window.speechSynthesis.getVoices();
+    
+    // Sometimes voices aren't loaded immediately
+    if (voices.length === 0) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        voices = window.speechSynthesis.getVoices();
+        playUtterance(text, voices);
+      };
+    } else {
+      playUtterance(text, voices);
+    }
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = language;
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
+    function playUtterance(textContent, availableVoices) {
+      const utterance = new SpeechSynthesisUtterance(textContent);
+      utterance.lang = language;
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
 
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend   = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
+      // Try to find a voice that exactly matches the language code (e.g., 'ta-IN')
+      let voice = availableVoices.find(v => v.lang === language || v.lang.replace('_', '-') === language);
+      
+      // Fallback 1: Try to match just the base language (e.g., 'ta')
+      if (!voice) {
+        const baseLang = language.split('-')[0];
+        voice = availableVoices.find(v => v.lang.startsWith(baseLang));
+      }
+      
+      // Fallback 2: Try Hindi (often has good cross-Indian script support on Windows/Android)
+      if (!voice) {
+        voice = availableVoices.find(v => v.lang.startsWith('hi'));
+      }
+      
+      // Fallback 3: Try English India
+      if (!voice) {
+        voice = availableVoices.find(v => v.lang === 'en-IN');
+      }
 
-    window.speechSynthesis.speak(utterance);
+      if (voice) {
+        utterance.voice = voice;
+      }
+
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend   = () => setIsSpeaking(false);
+      utterance.onerror = (e) => {
+        console.warn('[Voice] Speech error:', e);
+        setIsSpeaking(false);
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }
   }, [language]);
 
   /** Cancels ongoing speech */

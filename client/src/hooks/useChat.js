@@ -78,7 +78,8 @@ const useChat = ({ sessionId, stage, onAiResponse }) => {
       // Small delay to feel natural
       await new Promise((r) => setTimeout(r, 700 + Math.random() * 600));
 
-      const fallbackText = getFallbackResponse(trimmed);
+      const langCode = localStorage.getItem('vp_language') || 'en';
+      const fallbackText = getFallbackResponse(trimmed, langCode, messages);
       const aiMsg = {
         id: (Date.now() + 1).toString(),
         role: 'ai',

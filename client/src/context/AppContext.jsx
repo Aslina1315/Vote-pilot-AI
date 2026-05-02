@@ -7,6 +7,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { getJourney, upsertUser, getUser } from '../services/api';
+import { useAuth } from './AuthContext';
 
 // ─── Initial State ───────────────────────────────────────────────────────────
 const initialState = {
@@ -54,16 +55,22 @@ const AppContext = createContext(null);
 export const AppProvider = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
+  const { currentUser } = useAuth();
+
   /**
-   * On mount: retrieve or create a session ID.
-   * Sessions persist across page reloads via localStorage.
+   * Sync session ID with Auth Context or fall back to anonymous ID.
    */
   useEffect(() => {
-    const stored = localStorage.getItem('vp_session_id');
-    const sessionId = stored || uuidv4();
-    if (!stored) localStorage.setItem('vp_session_id', sessionId);
-    dispatch({ type: 'SET_SESSION', payload: sessionId });
-  }, []);
+    if (currentUser && currentUser.uid) {
+      dispatch({ type: 'SET_SESSION', payload: currentUser.uid });
+      localStorage.setItem('vp_session_id', currentUser.uid);
+    } else {
+      const stored = localStorage.getItem('vp_session_id');
+      const sessionId = stored || uuidv4();
+      if (!stored) localStorage.setItem('vp_session_id', sessionId);
+      dispatch({ type: 'SET_SESSION', payload: sessionId });
+    }
+  }, [currentUser]);
 
   /**
    * When sessionId is set, load user and journey from backend.

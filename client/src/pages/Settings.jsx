@@ -29,22 +29,22 @@ const PERSONAS = [
 ];
 
 const ToggleSwitch = ({ id, checked, onChange, label, description }) => (
-  <div className="flex items-center justify-between py-4 border-b border-white/5 last:border-0">
-    <div>
-      <p className="text-white text-sm font-bold" style={{ fontFamily: '"Manrope", sans-serif' }}>{label}</p>
-      {description && <p className="text-xs text-parchment-400 mt-1">{description}</p>}
+  <div className="flex items-center justify-between py-5 border-b border-white/5 last:border-0 hover:bg-white/[0.02] transition-colors rounded-lg px-2 -mx-2">
+    <div className="pr-4">
+      <p className="text-white text-base font-bold tracking-wide" style={{ fontFamily: '"Manrope", sans-serif', letterSpacing: '0.02em' }}>{label}</p>
+      {description && <p className="text-sm text-parchment-400/80 mt-1.5 leading-relaxed tracking-wide" style={{ fontFamily: '"Inter", sans-serif' }}>{description}</p>}
     </div>
     <button
       id={id} role="switch" aria-checked={checked} aria-label={label}
       onClick={() => onChange(!checked)}
-      className={`relative w-12 h-6 rounded-full transition-colors duration-200 flex-shrink-0
-        ${checked ? 'bg-saffron-500' : 'bg-ink-800 border border-white/10'}`}
+      className={`relative w-14 h-7 rounded-full transition-colors duration-300 flex-shrink-0 shadow-inner
+        ${checked ? 'bg-saffron-500 border border-saffron-400' : 'bg-ink-800 border border-white/10'}`}
     >
       <motion.span
         layout
-        className="absolute top-1 w-4 h-4 bg-white rounded-full shadow"
+        className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow-md ${checked ? 'left-[30px]' : 'left-[4px]'}`}
         animate={{ left: checked ? '28px' : '4px' }}
-        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
       />
     </button>
   </div>
@@ -105,76 +105,29 @@ const Settings = () => {
         </motion.div>
       )}
 
-      {/* Profile */}
-      <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="vp-card p-6" aria-label="Profile settings">
-        <h2 className="text-xl font-display font-bold text-white mb-5">My Civic Profile</h2>
-        {currentUser && (
-          <div className="flex items-center gap-4 p-4 bg-ink-900 rounded-xl mb-6 border border-white/5">
-            {photoURL || currentUser.photoURL
-              ? <img src={photoURL || currentUser.photoURL} alt="Profile" className="w-12 h-12 rounded-full border-2 border-saffron-500" />
-              : <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white" style={{ background: 'linear-gradient(135deg, #EA580C, #F97316)' }}>{(name || currentUser.displayName || currentUser.email || 'V').charAt(0).toUpperCase()}</div>
-            }
-            <div>
-              <p className="text-white text-base font-bold">{name || currentUser.displayName || 'Voter'}</p>
-              <p className="text-parchment-400 text-xs mt-0.5">{currentUser.email}</p>
-            </div>
-          </div>
-        )}
-
-        <form onSubmit={handleSaveProfile} className="space-y-4" noValidate>
-          <div>
-            <label htmlFor="settings-name" className="block text-xs font-bold text-parchment-400 uppercase tracking-wider mb-1">Display Name</label>
-            <input id="settings-name" type="text" value={name} onChange={(e) => setName(e.target.value)} className="input-field" placeholder="Your name" maxLength={100} />
-          </div>
-          <div>
-            <label htmlFor="settings-photo" className="block text-xs font-bold text-parchment-400 uppercase tracking-wider mb-1">Profile Photo URL</label>
-            <input id="settings-photo" type="url" value={photoURL} onChange={(e) => setPhotoURL(e.target.value)} className="input-field" placeholder="https://example.com/photo.jpg" />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="settings-state" className="block text-xs font-bold text-parchment-400 uppercase tracking-wider mb-1">State / UT</label>
-              <select id="settings-state" value={state} onChange={(e) => setState(e.target.value)} className="input-field">
-                <option value="">— Select —</option>
-                {IN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
-            </div>
-            <div>
-              <label htmlFor="settings-age" className="block text-xs font-bold text-parchment-400 uppercase tracking-wider mb-1">Age</label>
-              <input id="settings-age" type="number" value={age} onChange={(e) => setAge(e.target.value)} className="input-field" placeholder="18+" min={18} max={120} />
-            </div>
-          </div>
-          <div>
-            <label htmlFor="settings-persona" className="block text-xs font-bold text-parchment-400 uppercase tracking-wider mb-1">Voter Type</label>
-            <select id="settings-persona" value={persona} onChange={(e) => setPersona(e.target.value)} className="input-field">
-              {PERSONAS.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
-            </select>
-          </div>
-          <button id="settings-save" type="submit" disabled={saving} className="btn-primary w-full mt-2" aria-label="Save profile">
-            {saving ? <div className="dot-loader"><span/><span/><span/></div> : `💾 Save Profile`}
-          </button>
-        </form>
-      </motion.section>
-
       {/* Preferences */}
       <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="vp-card p-6" aria-label="App preferences">
-        <h2 className="text-xl font-display font-bold text-white mb-4">Preferences</h2>
+        <h2 className="text-2xl font-display font-bold text-white mb-6 border-b border-white/10 pb-4 tracking-wide">App Preferences</h2>
 
-        <ToggleSwitch id="toggle-voice" checked={voiceEnabled} onChange={(v) => handleToggleSetting('voiceEnabled', v)} label={`🔊 ${t('voiceResponses') || 'Voice Responses'}`} description="AI reads answers aloud using text-to-speech" />
-        <ToggleSwitch id="toggle-contrast" checked={highContrast} onChange={(v) => handleToggleSetting('highContrast', v)} label={`♿ ${t('highContrast') || 'High Contrast'}`} description="Improve visibility for accessibility" />
-        <ToggleSwitch id="toggle-theme" checked={isDark} onChange={toggleTheme} label={`🌙 ${t('darkMode') || 'Dark Mode'}`} description="Toggle between light and dark interface" />
+        <div className="space-y-2">
+          <ToggleSwitch id="toggle-voice" checked={voiceEnabled} onChange={(v) => handleToggleSetting('voiceEnabled', v)} label={`🔊 ${t('voiceResponses') || 'Voice Responses'}`} description="AI reads answers aloud using text-to-speech" />
+          <ToggleSwitch id="toggle-contrast" checked={highContrast} onChange={(v) => handleToggleSetting('highContrast', v)} label={`♿ ${t('highContrast') || 'High Contrast'}`} description="Improve visibility for accessibility" />
+          <ToggleSwitch id="toggle-theme" checked={isDark} onChange={toggleTheme} label={`🌙 ${t('darkMode') || 'Dark Mode'}`} description="Toggle between light and dark interface" />
+        </div>
 
-        <div className="pt-4 border-t border-white/5 mt-4">
-          <label htmlFor="settings-language" className="block text-xs font-bold text-parchment-400 uppercase tracking-wider mb-2">
-            🌐 {t('languageSetting') || 'Language'}
+        <div className="pt-6 border-t border-white/10 mt-6">
+          <label htmlFor="settings-language" className="block text-sm font-bold text-parchment-400 uppercase tracking-widest mb-3" style={{ fontFamily: '"Manrope", sans-serif' }}>
+            🌐 {t('languageSetting') || 'Display Language'}
           </label>
           <select
             id="settings-language"
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="input-field"
+            className="w-full bg-ink-950 border border-white/10 rounded-xl px-4 py-3 text-white font-medium text-lg focus:ring-2 focus:ring-saffron-500 outline-none transition-all cursor-pointer hover:bg-white/[0.02]"
+            style={{ fontFamily: '"Manrope", sans-serif' }}
           >
             {supportedLanguages.map((l) => (
-              <option key={l.code} value={l.code}>
+              <option key={l.code} value={l.code} className="bg-ink-900 text-white py-2">
                 {l.flag} {l.name}
               </option>
             ))}
@@ -183,15 +136,15 @@ const Settings = () => {
       </motion.section>
 
       {/* Privacy / Danger zone */}
-      <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="vp-card p-6" aria-label="Privacy and data controls">
-        <h2 className="text-xl font-display font-bold text-white mb-4">Privacy & Data</h2>
-        <p className="text-parchment-400 text-sm mb-4">Your conversation history and journey are stored securely. Clear them any time.</p>
-        <div className="space-y-3">
-          <button id="clear-history" onClick={handleClearHistory} className="btn-ghost w-full" style={{ color: '#F87171', borderColor: 'rgba(248, 113, 113, 0.3)' }} aria-label="Clear AI conversation history">
-            🗑️ Clear Conversation History
+      <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="vp-card p-6 border-t-4 border-red-500/50" aria-label="Privacy and data controls">
+        <h2 className="text-2xl font-display font-bold text-white mb-3 tracking-wide">Privacy & Data</h2>
+        <p className="text-parchment-400/80 text-sm mb-6 leading-relaxed tracking-wide">Your conversation history and journey are stored securely. You can clear them at any time below.</p>
+        <div className="space-y-4">
+          <button id="clear-history" onClick={handleClearHistory} className="w-full py-4 rounded-xl font-bold tracking-wider text-sm transition-all bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30" aria-label="Clear AI conversation history">
+            🗑️ CLEAR CONVERSATION HISTORY
           </button>
-          <button id="reset-journey" onClick={handleResetJourney} className="btn-ghost w-full" style={{ color: '#F87171', borderColor: 'rgba(248, 113, 113, 0.3)' }} aria-label="Reset your voting journey">
-            🔄 Reset My Voting Journey
+          <button id="reset-journey" onClick={handleResetJourney} className="w-full py-4 rounded-xl font-bold tracking-wider text-sm transition-all bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30" aria-label="Reset your voting journey">
+            🔄 RESET MY VOTING JOURNEY
           </button>
         </div>
       </motion.section>

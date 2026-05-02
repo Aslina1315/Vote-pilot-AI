@@ -23,7 +23,7 @@ const QUICK_PROMPTS = [
   { label: 'Guide me as a first-time voter',    icon: '🆕' },
 ];
 
-// Word-by-word streaming renderer
+// ChatGPT-style character streaming renderer
 const StreamingText = ({ text, onDone }) => {
   const [displayed, setDisplayed] = useState('');
   const idx = useRef(0);
@@ -31,12 +31,13 @@ const StreamingText = ({ text, onDone }) => {
   useEffect(() => {
     idx.current = 0;
     setDisplayed('');
-    const words = text.split(' ');
+    // Split by character to give it a true generative AI typing feel
+    const chars = text.split('');
     const timer = setInterval(() => {
-      if (idx.current >= words.length) { clearInterval(timer); onDone?.(); return; }
-      setDisplayed((p) => p + (idx.current === 0 ? '' : ' ') + words[idx.current]);
+      if (idx.current >= chars.length) { clearInterval(timer); onDone?.(); return; }
+      setDisplayed((p) => p + chars[idx.current]);
       idx.current++;
-    }, 22);
+    }, 12); // 12ms per char is very natural
     return () => clearInterval(timer);
   }, [text]); // eslint-disable-line
 
@@ -102,7 +103,7 @@ const Assistant = () => {
 
   const { isListening, isSpeaking, isSupported, startListening, stopListening, speak, stopSpeaking } = useVoice({
     onTranscript: handleTranscript,
-    language: language === 'ta' ? 'ta-IN' : 'en-IN',
+    language: language === 'en' ? 'en-IN' : `${language}-IN`,
   });
 
   return (
