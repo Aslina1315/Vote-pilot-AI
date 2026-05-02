@@ -72,6 +72,16 @@ export const getAiGuidance = (stage, persona) =>
 export const clearAiHistory = (sessionId) =>
   apiClient.delete(`/ai/history/${sessionId}`);
 
+// ─── Auth Endpoints (Local Custom Auth) ──────────────────────────────────────
+export const registerUser = (email, password, name) =>
+  apiClient.post('/auth/register', { email, password, name });
+
+export const loginUser = (email, password) =>
+  apiClient.post('/auth/login', { email, password });
+
+export const getMe = (sessionId) =>
+  apiClient.get(`/auth/me/${sessionId}`);
+
 // ─── User Endpoints ──────────────────────────────────────────────────────────
 
 export const getUser = (sessionId) =>

@@ -1,23 +1,11 @@
 /**
- * AuthContext — Firebase Authentication state manager.
- * Gracefully handles demo mode when Firebase is not yet configured.
+ * AuthContext — Custom Authentication state manager using local Express/MongoDB backend.
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { auth, isConfigured, signInWithGoogle as fbGoogle, loginWithEmail as fbEmail, registerWithEmail, logout as fbLogout, resetPassword } from '../config/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
-import { upsertUser } from '../services/api';
+import { registerUser, loginUser, getMe, upsertUser } from '../services/api';
 
 const AuthContext = createContext(null);
-
-// ─── Demo user used when Firebase is not yet configured ──────────────────────
-const DEMO_USER = {
-  uid:         'demo-session',
-  displayName: 'Demo Voter',
-  email:       'demo@votepilot.ai',
-  photoURL:    null,
-  isDemo:      true,
-};
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -25,78 +13,82 @@ export const AuthProvider = ({ children }) => {
   const [authError, setAuthError]     = useState('');
 
   useEffect(() => {
-    if (!isConfigured || !auth) {
-      // Firebase not configured — use demo user so app is fully navigable
-      console.warn('[VotePilot] Firebase not configured. Running in demo mode.');
-      localStorage.setItem('vp_session_id', DEMO_USER.uid);
-      setCurrentUser(DEMO_USER);
-      setAuthLoading(false);
-      return;
-    }
-
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setCurrentUser(user);
-      setAuthLoading(false);
-      if (user) {
-        localStorage.setItem('vp_session_id', user.uid);
+    const initializeAuth = async () => {
+      const sessionId = localStorage.getItem('vp_session_id');
+      if (sessionId) {
         try {
-          await upsertUser({
-            sessionId: user.uid,
-            name: user.displayName || 'Voter',
-            settings: { voiceEnabled: true, language: 'en', highContrast: false },
-          });
-        } catch {}
+          const user = await getMe(sessionId);
+          setCurrentUser(user);
+        } catch (err) {
+          // Token/Session invalid or user deleted
+          localStorage.removeItem('vp_session_id');
+          setCurrentUser(null);
+        }
       }
-    });
-    return unsubscribe;
+      setAuthLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const clearError = () => setTimeout(() => setAuthError(''), 5000);
 
-  const handleGoogleLogin = async () => {
-    if (!isConfigured) return demoNotice();
+  const handleRegister = async (email, password, name) => {
     try {
       setAuthError('');
-      return await fbGoogle();
-    } catch (err) { setAuthError(getFriendlyError(err.code)); clearError(); throw err; }
+      const user = await registerUser(email, password, name);
+      localStorage.setItem('vp_session_id', user.uid);
+      setCurrentUser(user);
+      
+      // Initialize their profile in the database via upsertUser
+      await upsertUser({
+        sessionId: user.uid,
+        name: user.displayName,
+        settings: { voiceEnabled: true, language: 'en', highContrast: false },
+      });
+      
+      return user;
+    } catch (err) {
+      setAuthError(err.message || 'Registration failed');
+      clearError();
+      throw err;
+    }
   };
 
   const handleEmailLogin = async (email, password) => {
-    if (!isConfigured) return demoNotice();
     try {
       setAuthError('');
-      return await fbEmail(email, password);
-    } catch (err) { setAuthError(getFriendlyError(err.code)); clearError(); throw err; }
-  };
-
-  const handleRegister = async (email, password, name) => {
-    if (!isConfigured) return demoNotice();
-    try {
-      setAuthError('');
-      return await registerWithEmail(email, password, name);
-    } catch (err) { setAuthError(getFriendlyError(err.code)); clearError(); throw err; }
+      const user = await loginUser(email, password);
+      localStorage.setItem('vp_session_id', user.uid);
+      setCurrentUser(user);
+      return user;
+    } catch (err) {
+      setAuthError(err.message || 'Login failed');
+      clearError();
+      throw err;
+    }
   };
 
   const handleLogout = async () => {
-    if (isConfigured && auth) await fbLogout();
     localStorage.removeItem('vp_session_id');
     setCurrentUser(null);
   };
 
   const handleResetPassword = async (email) => {
-    if (!isConfigured) return;
-    try { await resetPassword(email); }
-    catch (err) { setAuthError(getFriendlyError(err.code)); }
+    // Basic stub since email sending requires SMTP
+    setAuthError('Password reset is not configured for this demo environment.');
+    clearError();
   };
 
-  const demoNotice = () => {
-    setAuthError('Firebase is not yet configured. The app is running in demo mode. Add your Firebase credentials to client/.env to enable authentication.');
+  // Google Sign In is disabled in local auth mode
+  const handleGoogleLogin = async () => {
+    setAuthError('Google Sign-In requires Firebase, which is currently disabled. Please use Email/Password.');
     clearError();
   };
 
   const value = {
     currentUser, authLoading, authError,
-    isConfigured,
+    isConfigured: true, // Always true for local auth
     signInWithGoogle: handleGoogleLogin,
     loginWithEmail:   handleEmailLogin,
     register:         handleRegister,
@@ -111,18 +103,4 @@ export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
-};
-
-const getFriendlyError = (code) => {
-  const m = {
-    'auth/email-already-in-use':   'This email is already registered.',
-    'auth/user-not-found':         'No account found with this email.',
-    'auth/wrong-password':         'Incorrect password.',
-    'auth/invalid-email':          'Please enter a valid email address.',
-    'auth/weak-password':          'Password must be at least 6 characters.',
-    'auth/too-many-requests':      'Too many attempts. Please wait.',
-    'auth/popup-closed-by-user':   'Sign-in was cancelled.',
-    'auth/network-request-failed': 'Network error. Check your connection.',
-  };
-  return m[code] || 'An unexpected error occurred.';
 };

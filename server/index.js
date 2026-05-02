@@ -40,7 +40,10 @@ app.use(requestLogger); // Log incoming requests
 app.use(globalRateLimiter); // Apply global rate limiting
 app.use(verifyFirebaseToken); // Attach uid to all requests
 
+const authRoutes      = require('./routes/auth');
+
 // ─── API Routes ─────────────────────────────────────────────────────────────
+app.use('/api/auth', authRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/journey', journeyRoutes);

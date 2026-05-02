@@ -7,13 +7,23 @@ const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema(
   {
-    // Unique session-based identifier (no login required)
+    // Unique session-based identifier (can be the Mongo _id)
     sessionId: {
       type: String,
       required: true,
       unique: true,
       index: true,
       maxlength: 64,
+    },
+    email: {
+      type: String,
+      unique: true,
+      sparse: true, // Allows null/missing emails for guests
+      trim: true,
+      lowercase: true,
+    },
+    password: {
+      type: String,
     },
 
     // Basic profile info
