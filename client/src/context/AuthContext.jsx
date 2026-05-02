@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
       
       return user;
     } catch (err) {
-      setAuthError(err.message || 'Registration failed');
+      setAuthError(getFriendlyError(err.message) || 'Registration failed');
       clearError();
       throw err;
     }
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
       setCurrentUser(user);
       return user;
     } catch (err) {
-      setAuthError(err.message || 'Login failed');
+      setAuthError(getFriendlyError(err.message) || 'Login failed');
       clearError();
       throw err;
     }
@@ -103,4 +103,15 @@ export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
+};
+
+const getFriendlyError = (code) => {
+  const m = {
+    'auth/email-already-in-use':   'This email is already registered. Please sign in.',
+    'auth/user-not-found':         'No account found with this email.',
+    'auth/wrong-password':         'Incorrect password. Please try again.',
+    'auth/invalid-email':          'Please enter a valid email address.',
+    'auth/weak-password':          'Password must be at least 6 characters.',
+  };
+  return m[code] || code;
 };

@@ -23,6 +23,7 @@ const Login = () => {
   const [loading, setLoading]     = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [localError, setLocalError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const error = authError || localError;
 
@@ -38,17 +39,24 @@ const Login = () => {
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
     setLocalError('');
+    setSuccessMsg('');
     setLoading(true);
     try {
       if (mode === 'register') {
         if (!name.trim()) { setLocalError('Please enter your name.'); setLoading(false); return; }
         await register(email, password, name);
+        setSuccessMsg('✨ Registration successful! Redirecting...');
       } else {
         await loginWithEmail(email, password);
+        setSuccessMsg('✅ Login successful! Redirecting...');
       }
-      navigate(from, { replace: true });
-    } catch { /* error shown via context */ }
-    setLoading(false);
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 1500);
+    } catch { 
+      setLoading(false);
+      /* error shown via context */ 
+    }
   };
 
   const handleReset = async (e) => {
@@ -129,12 +137,19 @@ const Login = () => {
             )}
           </AnimatePresence>
 
-          {/* Success banner for reset */}
-          {resetSent && (
-            <div className="mb-5 p-3 rounded-xl bg-green-900/30 border border-green-700/50 text-green-300 text-sm text-center">
-              ✅ Password reset email sent. Check your inbox.
-            </div>
-          )}
+          {/* Success banner for reset or login/signup */}
+          <AnimatePresence>
+            {(resetSent || successMsg) && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mb-5 p-3 rounded-xl bg-green-900/30 border border-green-700/50 text-green-300 text-sm text-center"
+              >
+                {successMsg || '✅ Password reset email sent. Check your inbox.'}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Divider removed as well */}
 
