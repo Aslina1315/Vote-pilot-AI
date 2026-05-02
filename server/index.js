@@ -55,10 +55,21 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ─── 404 Handler ───────────────────────────────────────────────────────────
-app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
-});
+const path = require('path');
+
+// ─── Serve Frontend (Production) ───────────────────────────────────────────
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/build')));
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+  });
+} else {
+  // ─── 404 Handler ───────────────────────────────────────────────────────────
+  app.use((req, res) => {
+    res.status(404).json({ error: 'Route not found' });
+  });
+}
 
 // ─── Global Error Handler ───────────────────────────────────────────────────
 app.use(errorHandler);
