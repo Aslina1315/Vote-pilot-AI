@@ -109,8 +109,8 @@ const getFriendlyError = (code) => {
   if (code.includes('Network Error')) {
     return 'Cannot connect to the server. Please ensure the backend is running.';
   }
-  if (code.includes('Database connection')) {
-    return 'The database is currently offline. Please check your MongoDB configuration.';
+  if (code.includes('Database connection') || code.includes('503')) {
+    return '🚀 App is running in Local Storage Mode (MongoDB is offline, but you can still sign up and log in!).';
   }
 
   const m = {

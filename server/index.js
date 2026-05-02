@@ -44,7 +44,6 @@ const authRoutes      = require('./routes/auth');
 const { ensureDbConnected } = require('./middleware/dbCheck');
 
 // ─── API Routes ─────────────────────────────────────────────────────────────
-app.use('/api', ensureDbConnected); // Ensure DB is up for all API calls
 app.use('/api/auth', authRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/user', userRoutes);
