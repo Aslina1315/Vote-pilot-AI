@@ -27,11 +27,11 @@ const errorHandler = (err, req, res, next) => {
     return res.status(401).json({ error: 'Invalid or missing authentication token.' });
   }
 
-  // Generic error response — never reveal internals in production
+  // Generic error response — temporarily reveal internals to debug
   const statusCode = err.statusCode || 500;
   res.status(statusCode).json({
-    error: isDev ? err.message : 'An internal server error occurred.',
-    ...(isDev && { stack: err.stack }),
+    error: err.message,
+    stack: err.stack,
   });
 };
 

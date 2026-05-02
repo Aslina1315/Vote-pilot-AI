@@ -11,18 +11,27 @@ let adminInitialized = false;
 
 const initAdmin = () => {
   if (adminInitialized) return;
+  
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+  if (!projectId || !clientEmail || !privateKey) {
+    console.warn('[Firebase Admin] Init skipped: Missing FIREBASE_ environment variables.');
+    return;
+  }
+
   try {
     admin.initializeApp({
       credential: admin.credential.cert({
-        projectId:    process.env.FIREBASE_PROJECT_ID,
-        clientEmail:  process.env.FIREBASE_CLIENT_EMAIL,
-        // Replace escaped newlines in the private key env var
-        privateKey:   (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n'),
+        projectId,
+        clientEmail,
+        privateKey: privateKey.replace(/\\n/g, '\n'),
       }),
     });
     adminInitialized = true;
   } catch (err) {
-    console.warn('[Firebase Admin] Init skipped (missing credentials):', err.message);
+    console.warn('[Firebase Admin] Init failed:', err.message);
   }
 };
 

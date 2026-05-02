@@ -6,9 +6,7 @@ const mongoose = require('mongoose');
  */
 const ensureDbConnected = (req, res, next) => {
   if (mongoose.connection.readyState !== 1) {
-    return res.status(503).json({
-      error: 'Database connection is currently unavailable. Please check your MongoDB configuration (MONGODB_URI).',
-    });
+    console.warn('⚠️ MongoDB is offline. Using local file storage fallback.');
   }
   next();
 };

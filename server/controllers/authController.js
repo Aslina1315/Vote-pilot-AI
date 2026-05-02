@@ -1,10 +1,13 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
+const localStorage = require('../utils/storage');
 
 /**
  * Register a new user
  */
 exports.register = async (req, res, next) => {
+  const isDbConnected = mongoose.connection.readyState === 1;
   try {
     const { email, password, name } = req.body;
 
@@ -13,7 +16,13 @@ exports.register = async (req, res, next) => {
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    let existingUser;
+    if (isDbConnected) {
+      existingUser = await User.findOne({ email });
+    } else {
+      existingUser = await localStorage.findUserByEmail(email);
+    }
+
     if (existingUser) {
       return res.status(400).json({ error: 'auth/email-already-in-use' });
     }
@@ -22,23 +31,25 @@ exports.register = async (req, res, next) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create user
-    // We use MongoDB _id as the sessionId to maintain compatibility with existing logic
-    const newUser = new User({
+    const userData = {
       email,
       password: hashedPassword,
       name,
-    });
-    
-    // Assign a temporary sessionId until we have the _id
-    newUser.sessionId = newUser._id.toString();
+      sessionId: new mongoose.Types.ObjectId().toString(),
+    };
 
-    await newUser.save();
+    let savedUser;
+    if (isDbConnected) {
+      savedUser = new User(userData);
+      await savedUser.save();
+    } else {
+      savedUser = await localStorage.saveUser(userData);
+    }
 
     res.status(201).json({
-      uid: newUser.sessionId,
-      email: newUser.email,
-      displayName: newUser.name,
+      uid: savedUser.sessionId,
+      email: savedUser.email,
+      displayName: savedUser.name,
     });
   } catch (err) {
     next(err);
@@ -49,6 +60,7 @@ exports.register = async (req, res, next) => {
  * Login a user
  */
 exports.login = async (req, res, next) => {
+  const isDbConnected = mongoose.connection.readyState === 1;
   try {
     const { email, password } = req.body;
 
@@ -57,7 +69,13 @@ exports.login = async (req, res, next) => {
     }
 
     // Find user
-    const user = await User.findOne({ email });
+    let user;
+    if (isDbConnected) {
+      user = await User.findOne({ email });
+    } else {
+      user = await localStorage.findUserByEmail(email);
+    }
+
     if (!user) {
       return res.status(400).json({ error: 'auth/user-not-found' });
     }
@@ -86,11 +104,18 @@ exports.login = async (req, res, next) => {
  * Get current user data by sessionId (used for re-authenticating on refresh)
  */
 exports.getMe = async (req, res, next) => {
+  const isDbConnected = mongoose.connection.readyState === 1;
   try {
     const { sessionId } = req.params;
     if (!sessionId) return res.status(400).json({ error: 'No session ID provided' });
 
-    const user = await User.findOne({ sessionId });
+    let user;
+    if (isDbConnected) {
+      user = await User.findOne({ sessionId });
+    } else {
+      user = await localStorage.findUserBySessionId(sessionId);
+    }
+
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     res.status(200).json({
