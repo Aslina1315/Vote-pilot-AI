@@ -110,9 +110,10 @@ const ChatMessage = ({ message }) => {
             </span>
           )}
         </div>
-        <div className="bubble-ai">
+        <div className="bubble-ai" role="status" aria-live="polite">
           {parseMarkdown(message.text)}
         </div>
+
         <p className="mt-1" style={{ fontSize: '10px', color: '#637AA8' }}>{time}</p>
       </div>
     </motion.div>

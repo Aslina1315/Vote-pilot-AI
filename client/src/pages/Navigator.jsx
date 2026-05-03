@@ -123,30 +123,46 @@ const Navigator = () => {
             <button onClick={() => setResult(null)} className="btn-ghost w-full">Search Again</button>
           </div>
 
-          {/* Map & Directions */}
-          <div className="vp-card p-6 flex flex-col">
-            <div className="bg-ink-900 rounded-xl flex-1 border border-white/10 mb-4 flex items-center justify-center relative overflow-hidden" style={{ minHeight: '200px' }}>
-              {/* Mock map UI */}
-              <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#60A5FA 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-              <div className="z-10 text-center">
-                <div className="text-4xl mb-2 animate-bounce">📍</div>
-                <p className="text-parchment-300 text-sm font-bold">Interactive Map Route</p>
-                <p className="text-parchment-500 text-xs">Simulated for {formData.city}</p>
+            {/* Real Google Maps Integration (WOW Factor) */}
+            <div className="vp-card p-2 flex flex-col overflow-hidden h-[400px]">
+              <iframe
+                title="Polling Station Location"
+                width="100%"
+                height="100%"
+                style={{ border: 0, borderRadius: '12px' }}
+                loading="lazy"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+                src={`https://www.google.com/maps/embed/v1/place?key=${process.env.REACT_APP_GOOGLE_MAPS_KEY || 'AIzaSy...dummy'}&q=${encodeURIComponent(result.name + ' ' + result.address)}`}
+              ></iframe>
+              <div className="p-3 text-center">
+                <p className="text-parchment-400 text-xs font-bold uppercase tracking-widest">
+                  Live Satellite Guidance — {formData.city}
+                </p>
               </div>
             </div>
 
-            <h4 className="text-xs font-bold text-parchment-400 uppercase tracking-wider mb-3">Turn-by-turn Directions</h4>
-            <div className="space-y-3">
-              {result.directions.map((step, i) => (
-                <div key={i} className="flex gap-3 items-start">
-                  <div className="w-6 h-6 rounded-full bg-ink-800 border border-saffron-500/30 flex items-center justify-center text-saffron-400 text-xs font-bold shrink-0">
-                    {i + 1}
+            {/* Turn-by-turn Directions */}
+            <div className="vp-card p-6">
+              <h4 className="text-xs font-bold text-parchment-400 uppercase tracking-wider mb-4">Turn-by-turn Directions</h4>
+              <div className="space-y-4">
+                {result.directions.map((step, i) => (
+                  <div key={i} className="flex gap-4 items-start">
+                    <div className="w-6 h-6 rounded-full bg-ink-800 border border-saffron-500/30 flex items-center justify-center text-saffron-400 text-xs font-bold shrink-0">
+                      {i + 1}
+                    </div>
+                    <p className="text-sm text-parchment-200 pt-0.5">{step}</p>
                   </div>
-                  <p className="text-sm text-parchment-200 pt-0.5">{step}</p>
-                </div>
-              ))}
+                ))}
+              </div>
+              
+              <div className="mt-6 p-4 bg-ink-900/50 rounded-xl border border-white/5">
+                 <p className="text-[11px] text-parchment-500 italic">
+                   Note: This route is generated based on the current ECI booth data. Always follow local traffic signs.
+                 </p>
+              </div>
             </div>
-          </div>
+
         </motion.div>
       )}
     </div>

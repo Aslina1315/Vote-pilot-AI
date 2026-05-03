@@ -49,6 +49,7 @@ const validateUserProfile = [
     .trim()
     .notEmpty().withMessage('Name is required.')
     .isLength({ max: 100 }).withMessage('Name too long.')
+    .matches(/^[^<>]+$/).withMessage('Name contains invalid characters.') // Strict no-HTML
     .escape(),
   body('state')
     .trim()
@@ -63,12 +64,15 @@ const validateUserProfile = [
 /** Validates journey step progress update */
 const validateJourneyUpdate = [
   body('step')
+    .trim()
     .isIn(['eligibility', 'documents', 'registration', 'voting'])
-    .withMessage('Invalid journey step.'),
+    .withMessage('Invalid journey step.')
+    .escape(),
   body('completed')
     .isBoolean().withMessage('Completed must be a boolean.'),
   handleValidationErrors,
 ];
+
 
 module.exports = {
   validateAiMessage,
