@@ -1,15 +1,20 @@
 /**
  * Global Error Handler Middleware
  * Catches all unhandled errors and returns safe, sanitized responses.
- * Never exposes stack traces or internal details in production.
  */
 
 const errorHandler = (err, req, res, next) => {
   const isDev = process.env.NODE_ENV === 'development';
 
-  // Log full error details server-side only
-  console.error(`[ERROR] ${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
-  console.error(err);
+  // Structured Logging for Google Cloud Logs
+  console.error(JSON.stringify({
+    severity: 'ERROR',
+    message: err.message,
+    stack: err.stack,
+    path: req.originalUrl,
+    method: req.method,
+    timestamp: new Date().toISOString()
+  }));
 
   // Mongoose validation error
   if (err.name === 'ValidationError') {
@@ -22,17 +27,23 @@ const errorHandler = (err, req, res, next) => {
     return res.status(409).json({ error: 'A record with this data already exists.' });
   }
 
-  // JWT / Auth errors
-  if (err.name === 'UnauthorizedError') {
+  // Auth errors
+  if (err.name === 'UnauthorizedError' || err.message === 'Authentication required.') {
     return res.status(401).json({ error: 'Invalid or missing authentication token.' });
   }
 
-  // Generic error response — temporarily reveal internals to debug
+  // Production Safety: Mask internal errors
   const statusCode = err.statusCode || 500;
+  const message = (isDev || statusCode < 500) 
+    ? err.message 
+    : 'An internal server error occurred. Please try again later.';
+
   res.status(statusCode).json({
-    error: err.message,
-    stack: err.stack,
+    error: message,
+    // Only send stack in development
+    ...(isDev && { stack: err.stack }),
   });
 };
 
 module.exports = { errorHandler };
+

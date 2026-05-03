@@ -1,6 +1,5 @@
 /**
- * VotePilot AI - Express Server Entry Point
- * Configures middleware, connects to MongoDB, and starts the HTTP server.
+ * VotePilot AI - Express Server (Production Optimized for Google Cloud Run)
  */
 
 require('dotenv').config();
@@ -12,36 +11,44 @@ const { globalRateLimiter } = require('./middleware/rateLimiter');
 const { errorHandler } = require('./middleware/errorHandler');
 const { requestLogger } = require('./middleware/requestLogger');
 
-// Import route modules
 const aiRoutes        = require('./routes/ai');
 const userRoutes      = require('./routes/user');
 const journeyRoutes   = require('./routes/journey');
 const analyticsRoutes = require('./routes/analytics');
+const authRoutes      = require('./routes/auth');
 const { verifyFirebaseToken } = require('./middleware/authMiddleware');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 
-// ─── Security Middleware ────────────────────────────────────────────────────
-app.use(helmet()); // Sets secure HTTP headers
+// ─── Production Monitoring (Google Cloud Logging) ──────────────────────────
+const log = (severity, message, extra = {}) => {
+  console.log(JSON.stringify({ severity, message, ...extra, timestamp: new Date().toISOString() }));
+};
 
-// CORS: only allow configured frontend origin
+// ─── Security & Performance Middleware ─────────────────────────────────────
+app.use(helmet()); 
 app.use(cors({
-  origin: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
+  origin: process.env.CLIENT_ORIGIN || '*', 
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 }));
 
-// ─── General Middleware ─────────────────────────────────────────────────────
-app.use(express.json({ limit: '10kb' })); // Reject oversized payloads
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
-app.use(requestLogger); // Log incoming requests
-app.use(globalRateLimiter); // Apply global rate limiting
-app.use(verifyFirebaseToken); // Attach uid to all requests
+app.use(express.json({ limit: '10kb' }));
+app.use(requestLogger);
+app.use(globalRateLimiter);
 
-const authRoutes      = require('./routes/auth');
-const { ensureDbConnected } = require('./middleware/dbCheck');
+// Timeout safety (prevent hanging connections in Cloud Run)
+app.use((req, res, next) => {
+  res.setTimeout(25000, () => {
+    log('WARNING', 'Request Timeout', { url: req.url });
+    res.status(504).send('Service Timeout');
+  });
+  next();
+});
+
+// Authentication Context
+app.use(verifyFirebaseToken);
 
 // ─── API Routes ─────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
@@ -50,62 +57,52 @@ app.use('/api/user', userRoutes);
 app.use('/api/journey', journeyRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
-// ─── Health Check Endpoint ──────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    service: 'VotePilot AI Server',
-  });
+  res.json({ status: 'ok', environment: process.env.NODE_ENV, uptime: process.uptime() });
 });
 
+// ─── Static Frontend Serving ───────────────────────────────────────────────
 const path = require('path');
-
-// ─── Serve Frontend (Production) ───────────────────────────────────────────
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/build')));
-
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
   });
-} else {
-  // ─── 404 Handler ───────────────────────────────────────────────────────────
-  app.use((req, res) => {
-    res.status(404).json({ error: 'Route not found' });
-  });
 }
 
-// ─── Global Error Handler ───────────────────────────────────────────────────
 app.use(errorHandler);
 
-// ─── Database Connection & Server Start ────────────────────────────────────
+// ─── Resilient Startup ──────────────────────────────────────────────────────
 const startServer = async () => {
-  // Connect to MongoDB (skip in test environment)
-  if (process.env.NODE_ENV !== 'test') {
+  log('DEFAULT', 'Starting VotePilot AI Server...');
+
+  if (process.env.NODE_ENV !== 'test' && process.env.MONGODB_URI) {
     try {
       await mongoose.connect(process.env.MONGODB_URI, {
         serverSelectionTimeoutMS: 5000,
       });
-      console.log('✅ MongoDB connected successfully');
+      log('INFO', 'MongoDB connected successfully');
     } catch (dbErr) {
-      console.warn('⚠️ MongoDB failed to connect. Running in memory mode without persistence.');
+      log('ERROR', 'MongoDB connection failed', { error: dbErr.message });
     }
   }
 
   const server = app.listen(PORT, () => {
-    console.log(`🚀 VotePilot AI server running on port ${PORT}`);
-    console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
+    log('INFO', `Server active on port ${PORT}`, { env: process.env.NODE_ENV });
   });
 
-  // Graceful shutdown on termination signals
+  // Graceful shutdown for Cloud Run
   process.on('SIGTERM', () => {
-    console.log('SIGTERM received. Shutting down gracefully...');
+    log('INFO', 'SIGTERM received. Closing connections...');
     server.close(() => {
       if (mongoose.connection.readyState === 1) mongoose.connection.close();
+      log('INFO', 'Shutdown complete.');
+      process.exit(0);
     });
   });
 };
 
 startServer();
 
-module.exports = app; // Export for testing
+module.exports = app;
+

@@ -15,27 +15,47 @@ const { getOrCreateJourney } = require('../services/journeyService');
 const chat = async (req, res, next) => {
   try {
     const { message, sessionId, stage } = req.body;
+    
+    // Prioritize authenticated UID, fallback to sessionId
+    const identifier = req.uid || sessionId;
 
-    // Retrieve or create user document (session-based, no login required)
-    let user = await User.findOne({ sessionId });
-    if (!user) {
-      user = new User({ sessionId });
+    if (!identifier) {
+      return res.status(400).json({ error: 'Valid session or authentication required.' });
     }
 
-    // Prepare history in Gemini-compatible format
+    // Retrieve or create user document
+    let user = await User.findOne({ 
+      $or: [{ uid: req.uid }, { sessionId }] 
+    });
+
+    if (!user) {
+      user = new User({ 
+        sessionId, 
+        uid: req.uid || null 
+      });
+    }
+
+    // Prepare history for Gemini
     const history = user.conversationHistory.map((turn) => ({
       role: turn.role,
       parts: turn.parts,
     }));
 
-    // Send to Gemini and receive response
+    // Send to Gemini (Service handles search grounding and its own truncation)
     const aiResponse = await sendMessage(message, history, stage);
 
-    // Append new turns to conversation history
+    // Append new turns
     user.conversationHistory.push(
       { role: 'user', parts: [{ text: message }] },
       { role: 'model', parts: [{ text: aiResponse }] }
     );
+
+    // Efficiency Fix: Truncate DB history to prevent document bloat (Max 20 messages)
+    const MAX_DB_HISTORY = 20;
+    if (user.conversationHistory.length > MAX_DB_HISTORY) {
+      user.conversationHistory = user.conversationHistory.slice(-MAX_DB_HISTORY);
+    }
+
     await user.save();
 
     res.json({
@@ -44,11 +64,11 @@ const chat = async (req, res, next) => {
       stage: stage || null,
     });
   } catch (err) {
-    // Avoid leaking Gemini error details to the client
-    console.error('[AI Controller] Error:', err.message);
-    next(new Error('AI service temporarily unavailable. Please try again.'));
+    // mask production errors
+    next(err);
   }
 };
+
 
 /**
  * GET /api/ai/guidance?stage=&persona=
